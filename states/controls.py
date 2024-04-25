@@ -1,19 +1,18 @@
 import os
 import pygame
 import gif_pygame as gif
-from states.select_game_mode import SelectGameMode
+from states.wumpus_world import WumpusWorld
 
-class Title():
-    def __init__(self, display, gameStateManager):
+class Controls():
+    def __init__(self, display, gameStateManager, current_player, current_world_size):
         self.display = display
         self.gameStateManager = gameStateManager
+        self.current_player = current_player
+        self.current_world_size = current_world_size
         self.FPS = 60
         self.clock = pygame.time.Clock()        
 
-        self.select_game_mode_1 = SelectGameMode(self.display, self.gameStateManager)
-        self.states = {
-            'select_game_mode_1': self.select_game_mode_1,
-        }
+        self.wumpus_world = WumpusWorld(self.display, self.gameStateManager, self.current_player, self.current_world_size)
 
     def run(self):
         self.load_assets()
@@ -23,8 +22,8 @@ class Title():
                     pygame.quit()
                     quit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.gameStateManager.set_state('select_game_mode_1')
-                    self.states[self.gameStateManager.get_state()].run()
+                    self.gameStateManager.set_state(self.wumpus_world)
+                    self.gameStateManager.get_state().run()
             
             self.display.fill((255, 255, 255))
             self.gif_obj.render(self.display, (0, 0))
@@ -34,4 +33,4 @@ class Title():
     def load_assets(self):
         self.assets_dir = os.path.join("assets")
         self.states_dir = os.path.join(self.assets_dir, "states")
-        self.gif_obj = gif.load(os.path.join(self.states_dir, "title.gif"))
+        self.gif_obj = gif.load(os.path.join(self.states_dir, "controls.gif"))
