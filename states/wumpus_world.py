@@ -28,7 +28,7 @@ class WumpusWorld():
             self.display.fill((255, 255, 255))
             self.gif_obj.render(self.display, (0, 0)) # gif background
             self.display.blit(self.board_surface, self.board_coord) # board
-            self.red_gif.render(self.board_surface, (self.cell_size, self.cell_size)) # red cell in board
+            
             pygame.display.flip()
             self.clock.tick(self.FPS)
     
@@ -135,58 +135,8 @@ class WumpusWorld():
                         self.cells[start_y][start_x] = 1
                         self.draw_board()  # Restart drawing board if path is not valid
                         return
-
-        # after having a valid path 
-        # put black cell if the cell is the starting cell
-        # put green cell if the cell is adjacent to blue cell
-        # put orange cell if the cell is adjacent to red cell
-        # put purple cell if the cell is adjacent to yellow cell
-        # put pink cell if the cell is adjacent to blue and red cell
-        # put gray cell if the cell is adjacent to blue and yellow cell
-        # put Turquoise cell if the cell is adjacent to red and yellow cell
-        # put brown cell if the cell is adjacent to blue and red and yellow cell
-        # put White cell if the cell is not adjacent to red, blue, and yellow cell
-
-        for y in range(self.board_size):
-            for x in range(self.board_size):
-                color = (255, 255, 255)  # Default color is white
-
-                if self.cells[y][x] == 1:  # Starting position
-                    color = (0, 0, 0)  # Black
-                elif self.cells[y][x] == 2:  # Blue cell
-                    color = (0, 0, 255)
-                elif self.cells[y][x] == 3:  # Red cell
-                    color = (255, 0, 0)
-                    self.red_gif = gif.load(os.path.join(self.board_dir, "wumpus.gif"))
-                    for i in range(len(self.red_gif.frames)):
-                        self.red_gif.frames[i] = pygame.transform.scale(self.red_gif.frames[i], (10, 10))
-
-                    # self.red_gif.render(self.board_surface, (self.cell_size, self.cell_size))
-
-                elif self.cells[y][x] == 4:  # Yellow cell
-                    color = (255, 255, 0)
-                else:
-                    # Checking for different adjacent colors
-                    blue_adjacent = self.adjacent_colors(y + 1, x, 2) or self.adjacent_colors(y - 1, x, 2) or self.adjacent_colors(y, x + 1, 2) or self.adjacent_colors(y, x - 1, 2)
-                    red_adjacent = self.adjacent_colors(y + 1, x, 3) or self.adjacent_colors(y - 1, x, 3) or self.adjacent_colors(y, x + 1, 3) or self.adjacent_colors(y, x - 1, 3)
-                    yellow_adjacent = self.adjacent_colors(y + 1, x, 4) or self.adjacent_colors(y - 1, x, 4) or self.adjacent_colors(y, x + 1, 4) or self.adjacent_colors(y, x - 1, 4)
-
-                    if blue_adjacent and red_adjacent and yellow_adjacent:
-                        color = (165, 42, 42)  # Brown
-                    elif blue_adjacent and red_adjacent:
-                        color = (255, 192, 203)  # Pink
-                    elif blue_adjacent and yellow_adjacent:
-                        color = (128, 128, 128)  # Gray
-                    elif red_adjacent and yellow_adjacent:
-                        color = (64, 224, 208)  # Turquoise
-                    elif blue_adjacent:
-                        color = (0, 128, 0)  # Green
-                    elif red_adjacent:
-                        color = (255, 165, 0)  # Orange
-                    elif yellow_adjacent:
-                        color = (128, 0, 128)  # Purple
-
-                pygame.draw.rect(self.board_surface, color, (x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
+        
+        self.draw_cell()
 
     def is_valid_path(self, start_x, start_y, end_x, end_y):
         visited = [[False for _ in range(self.board_size)] for _ in range(self.board_size)]
@@ -204,7 +154,74 @@ class WumpusWorld():
 
         return dfs(start_x, start_y)
     
-    def adjacent_colors(self, y, x, target_color):
+    def draw_cell(self):
+        for y in range(self.board_size):
+            for x in range(self.board_size):
+                self.safe_cell = pygame.image.load(os.path.join(self.tile_status, "safe_tile.png"))
+                self.safe_cell = pygame.transform.scale(self.safe_cell, (self.cell_size, self.cell_size))
+                self.board_surface.blit(self.safe_cell, (x * self.cell_size, y * self.cell_size))
+                
+                if self.cells[y][x] == 1: # Starting position
+                    self.start_cell = pygame.image.load(os.path.join(self.tile_status, "start_tile.png"))
+                    self.start_cell = pygame.transform.scale(self.start_cell, (self.cell_size, self.cell_size))
+                    self.board_surface.blit(self.start_cell, (x * self.cell_size, y * self.cell_size))
+
+                elif self.cells[y][x] == 2:  # Blue cell
+                    self.pit_cell = pygame.image.load(os.path.join(self.images_dir, "pit.png"))
+                    self.pit_cell = pygame.transform.scale(self.pit_cell, (self.cell_size, self.cell_size))
+                    self.board_surface.blit(self.pit_cell, (x * self.cell_size, y * self.cell_size))
+
+                elif self.cells[y][x] == 3:  # Red cell
+                    self.wumpus_cell = pygame.image.load(os.path.join(self.images_dir, "wumpus.png"))
+                    self.wumpus_cell = pygame.transform.scale(self.wumpus_cell, (self.cell_size, self.cell_size))
+                    self.board_surface.blit(self.wumpus_cell, (x * self.cell_size, y * self.cell_size))
+
+                elif self.cells[y][x] == 4:  # Yellow cell
+                    self.gold_cell = pygame.image.load(os.path.join(self.images_dir, "gold.png"))
+                    self.gold_cell = pygame.transform.scale(self.gold_cell, (self.cell_size, self.cell_size))
+                    self.board_surface.blit(self.gold_cell, (x * self.cell_size, y * self.cell_size))
+                
+                else:
+                    pit_adjacent = self.adjacent_cell(y + 1, x, 2) or self.adjacent_cell(y - 1, x, 2) or self.adjacent_cell(y, x + 1, 2) or self.adjacent_cell(y, x - 1, 2)
+                    wumpus_adjacent = self.adjacent_cell(y + 1, x, 3) or self.adjacent_cell(y - 1, x, 3) or self.adjacent_cell(y, x + 1, 3) or self.adjacent_cell(y, x - 1, 3)
+                    gold_adjacent = self.adjacent_cell(y + 1, x, 4) or self.adjacent_cell(y - 1, x, 4) or self.adjacent_cell(y, x + 1, 4) or self.adjacent_cell(y, x - 1, 4)
+
+                    if pit_adjacent and wumpus_adjacent and gold_adjacent:
+                        self.stench_breeze_glitter_cell = pygame.image.load(os.path.join(self.tile_status, "stench_breeze_glitter_tile.png"))
+                        self.stench_breeze_glitter_cell = pygame.transform.scale(self.stench_breeze_glitter_cell, (self.cell_size, self.cell_size))
+                        self.board_surface.blit(self.stench_breeze_glitter_cell, (x * self.cell_size, y * self.cell_size))
+                    
+                    elif pit_adjacent and wumpus_adjacent:
+                        self.stench_breeze_cell = pygame.image.load(os.path.join(self.tile_status, "stench_breeze_tile.png"))
+                        self.stench_breeze_cell = pygame.transform.scale(self.stench_breeze_cell, (self.cell_size, self.cell_size))
+                        self.board_surface.blit(self.stench_breeze_cell, (x * self.cell_size, y * self.cell_size))
+
+                    elif pit_adjacent and gold_adjacent:
+                        self.breeze_glitter_cell = pygame.image.load(os.path.join(self.tile_status, "breeze_glitter_tile.png"))
+                        self.breeze_glitter_cell = pygame.transform.scale(self.breeze_glitter_cell, (self.cell_size, self.cell_size))
+                        self.board_surface.blit(self.breeze_glitter_cell, (x * self.cell_size, y * self.cell_size))
+
+                    elif wumpus_adjacent and gold_adjacent:
+                        self.stench_glitter_cell = pygame.image.load(os.path.join(self.tile_status, "stench_glitter_tile.png"))
+                        self.stench_glitter_cell = pygame.transform.scale(self.stench_glitter_cell, (self.cell_size, self.cell_size))
+                        self.board_surface.blit(self.stench_glitter_cell, (x * self.cell_size, y * self.cell_size))
+
+                    elif pit_adjacent:
+                        self.breeze_cell = pygame.image.load(os.path.join(self.tile_status, "breeze_tile.png"))
+                        self.breeze_cell = pygame.transform.scale(self.breeze_cell, (self.cell_size, self.cell_size))
+                        self.board_surface.blit(self.breeze_cell, (x * self.cell_size, y * self.cell_size))
+
+                    elif wumpus_adjacent:
+                        self.stench_cell = pygame.image.load(os.path.join(self.tile_status, "stench_tile.png"))
+                        self.stench_cell = pygame.transform.scale(self.stench_cell, (self.cell_size, self.cell_size))
+                        self.board_surface.blit(self.stench_cell, (x * self.cell_size, y * self.cell_size))
+
+                    elif gold_adjacent:
+                        self.glitter_cell = pygame.image.load(os.path.join(self.tile_status, "glitter_tile.png"))
+                        self.glitter_cell = pygame.transform.scale(self.glitter_cell, (self.cell_size, self.cell_size))
+                        self.board_surface.blit(self.glitter_cell, (x * self.cell_size, y * self.cell_size))
+    
+    def adjacent_cell(self, y, x, target_color):
         if y < 0 or y >= self.board_size or x < 0 or x >= self.board_size:
             return False
         return self.cells[y][x] == target_color
@@ -213,7 +230,8 @@ class WumpusWorld():
         self.assets_dir = os.path.join("assets")
         self.states_dir = os.path.join(self.assets_dir, "states")
         self.board_dir = os.path.join(self.assets_dir, "board")
-        self.tile_status_dir = os.path.join(self.board_dir, "tile_status")
+        self.images_dir = os.path.join(self.board_dir, "img")
+        self.tile_status = os.path.join(self.images_dir, "tile_status")
         self.gif_obj = gif.load(os.path.join(self.states_dir, "board.gif"))
 
 
