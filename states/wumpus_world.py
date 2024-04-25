@@ -26,8 +26,9 @@ class WumpusWorld():
             
             
             self.display.fill((255, 255, 255))
-            self.gif_obj.render(self.display, (0, 0))
-            self.display.blit(self.board_surface, self.board_coord)
+            self.gif_obj.render(self.display, (0, 0)) # gif background
+            self.display.blit(self.board_surface, self.board_coord) # board
+            self.red_gif.render(self.board_surface, (self.cell_size, self.cell_size)) # red cell in board
             pygame.display.flip()
             self.clock.tick(self.FPS)
     
@@ -77,7 +78,6 @@ class WumpusWorld():
         self.board_width = self.board_size * self.cell_size
         self.board_height = self.board_size * self.cell_size
         self.board_surface = pygame.Surface((self.board_width, self.board_height))
-        print("--- 1")
         
         # the first square is the starting position therefore the color is white
         # the number of blue, red, and yellow will depend on the size of board_size
@@ -89,7 +89,6 @@ class WumpusWorld():
                 row.append(0)  # 0 represents white cells
             self.cells.append(row)
         
-        print("--- 2")
         # check if there is a path from first cell to the yellow cells in the board where the path must not go through the blue or red cells
         # if there are no path from first cell to the yellow cells then make a random path from first cell to the yellow cells
         # by making the random path cells white
@@ -106,7 +105,6 @@ class WumpusWorld():
                 if self.cells[y][x] == 0 and not (y == 0 and x == 1) and not (y == 1 and x == 0):
                     self.cells[y][x] = 2  # 2 represents blue cells
                     break
-        print("--- 3")
 
         # Place red cells
         red_cells_placed = 0
@@ -118,7 +116,6 @@ class WumpusWorld():
                     self.cells[y][x] = 3  # 3 represents red cells
                     red_cells_placed += 1
                     break
-        print("--- 4")
 
         # Place yellow cells
         for _ in range(self.yellow_cells):
@@ -128,7 +125,6 @@ class WumpusWorld():
                 if abs(x - start_x) + abs(y - start_y) > 2 and self.cells[y][x] == 0:  # Only place if cell is empty and not too close to the starting position
                     self.cells[y][x] = 4  # 4 represents yellow cells
                     break
-        print("--- 5")
 
         # Check if there's a path from the starting cell to each yellow cell
         for y in range(self.board_size):
@@ -139,7 +135,6 @@ class WumpusWorld():
                         self.cells[start_y][start_x] = 1
                         self.draw_board()  # Restart drawing board if path is not valid
                         return
-        print("--- 6")
 
         # after having a valid path 
         # put black cell if the cell is the starting cell
@@ -150,64 +145,48 @@ class WumpusWorld():
         # put gray cell if the cell is adjacent to blue and yellow cell
         # put Turquoise cell if the cell is adjacent to red and yellow cell
         # put brown cell if the cell is adjacent to blue and red and yellow cell
-        # put Cyan cell if the cell is not adjacent to red, blue, and yellow cell
-
-        # Draw cells on the board
-        # for y in range(self.board_size):
-        #     for x in range(self.board_size):
-        #         color = (255, 255, 255)  # Default color is white
-        #         if self.cells[y][x] == 1:  # Starting position
-        #             color = (0, 0, 0)
-        #         elif self.cells[y][x] == 2:  # Blue cell
-        #             color = (0, 0, 255)
-        #         elif self.cells[y][x] == 3:  # Red cell
-        #             color = (255, 0, 0)
-        #         elif self.cells[y][x] == 4:  # Yellow cell
-        #             color = (255, 255, 0)
-        #         pygame.draw.rect(self.board_surface, color, (x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
+        # put White cell if the cell is not adjacent to red, blue, and yellow cell
 
         for y in range(self.board_size):
             for x in range(self.board_size):
                 color = (255, 255, 255)  # Default color is white
-                adjacent_colors = set()
+
                 if self.cells[y][x] == 1:  # Starting position
                     color = (0, 0, 0)  # Black
                 elif self.cells[y][x] == 2:  # Blue cell
                     color = (0, 0, 255)
                 elif self.cells[y][x] == 3:  # Red cell
                     color = (255, 0, 0)
+                    self.red_gif = gif.load(os.path.join(self.board_dir, "wumpus.gif"))
+                    for i in range(len(self.red_gif.frames)):
+                        self.red_gif.frames[i] = pygame.transform.scale(self.red_gif.frames[i], (10, 10))
+
+                    # self.red_gif.render(self.board_surface, (self.cell_size, self.cell_size))
+
                 elif self.cells[y][x] == 4:  # Yellow cell
                     color = (255, 255, 0)
-
-                # Check adjacent cells
-                if y > 0:
-                    adjacent_colors.add(self.cells[y - 1][x])
-                if y < self.board_size - 1:
-                    adjacent_colors.add(self.cells[y + 1][x])
-                if x > 0:
-                    adjacent_colors.add(self.cells[y][x - 1])
-                if x < self.board_size - 1:
-                    adjacent_colors.add(self.cells[y][x + 1])
-
-                if 2 in adjacent_colors and 3 in adjacent_colors:
-                    color = (255, 192, 203)  # Pink
-                elif 2 in adjacent_colors and 4 in adjacent_colors:
-                    color = (128, 128, 128)  # Gray
-                elif 3 in adjacent_colors and 4 in adjacent_colors:
-                    color = (64, 224, 208)  # Turquoise
-                elif 2 in adjacent_colors and 3 in adjacent_colors and 4 in adjacent_colors:
-                    color = (165, 42, 42)  # Brown
-                elif 2 in adjacent_colors:
-                    color = (0, 128, 0)  # Green
-                elif 3 in adjacent_colors:
-                    color = (255, 165, 0)  # Orange
-                elif 4 in adjacent_colors:
-                    color = (128, 0, 128)  # Purple
                 else:
-                    color = (255, 255, 255)  # white
+                    # Checking for different adjacent colors
+                    blue_adjacent = self.adjacent_colors(y + 1, x, 2) or self.adjacent_colors(y - 1, x, 2) or self.adjacent_colors(y, x + 1, 2) or self.adjacent_colors(y, x - 1, 2)
+                    red_adjacent = self.adjacent_colors(y + 1, x, 3) or self.adjacent_colors(y - 1, x, 3) or self.adjacent_colors(y, x + 1, 3) or self.adjacent_colors(y, x - 1, 3)
+                    yellow_adjacent = self.adjacent_colors(y + 1, x, 4) or self.adjacent_colors(y - 1, x, 4) or self.adjacent_colors(y, x + 1, 4) or self.adjacent_colors(y, x - 1, 4)
+
+                    if blue_adjacent and red_adjacent and yellow_adjacent:
+                        color = (165, 42, 42)  # Brown
+                    elif blue_adjacent and red_adjacent:
+                        color = (255, 192, 203)  # Pink
+                    elif blue_adjacent and yellow_adjacent:
+                        color = (128, 128, 128)  # Gray
+                    elif red_adjacent and yellow_adjacent:
+                        color = (64, 224, 208)  # Turquoise
+                    elif blue_adjacent:
+                        color = (0, 128, 0)  # Green
+                    elif red_adjacent:
+                        color = (255, 165, 0)  # Orange
+                    elif yellow_adjacent:
+                        color = (128, 0, 128)  # Purple
 
                 pygame.draw.rect(self.board_surface, color, (x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
-        print("--- 7")
 
     def is_valid_path(self, start_x, start_y, end_x, end_y):
         visited = [[False for _ in range(self.board_size)] for _ in range(self.board_size)]
@@ -224,10 +203,17 @@ class WumpusWorld():
             return False
 
         return dfs(start_x, start_y)
+    
+    def adjacent_colors(self, y, x, target_color):
+        if y < 0 or y >= self.board_size or x < 0 or x >= self.board_size:
+            return False
+        return self.cells[y][x] == target_color
 
     def load_assets(self):
         self.assets_dir = os.path.join("assets")
         self.states_dir = os.path.join(self.assets_dir, "states")
+        self.board_dir = os.path.join(self.assets_dir, "board")
+        self.tile_status_dir = os.path.join(self.board_dir, "tile_status")
         self.gif_obj = gif.load(os.path.join(self.states_dir, "board.gif"))
 
 
