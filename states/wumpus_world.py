@@ -2,17 +2,21 @@ import os
 import pygame
 import gif_pygame as gif
 import random
+from win import Win
+from lose import Lose
 
 class WumpusWorld():
     def __init__(self, display, gameStateManager, current_player, current_world_size):
+        pygame.init()
         self.display = display
         self.gameStateManager = gameStateManager
         self.current_player = current_player
         self.current_world_size = current_world_size
         self.FPS = 60
+        self.WHITE = (255, 255, 255)
         self.clock = pygame.time.Clock() 
 
-        self.player_moves = set()
+        self.player_moves = {}
         # self.player_moves will keep track of the moves that the player took
         # if the player click 'd' means left and the coord of that is (0, 1)
         # then we store the move to the dictionary and the status of that cell
@@ -41,6 +45,9 @@ class WumpusWorld():
             'below': False,
         }
         self.curr_position = [0, 0]
+        self.player_score = 0
+        self.action_minus_score = 0
+        self.still_gold = False
 
         # !important
         # 0 means safe cell
@@ -56,9 +63,12 @@ class WumpusWorld():
         # 10 means cell is adjacent to wumpus and gold cell
         # 11 means cell is adjacent to pit, wumpus, and gold cell
 
+        self.is_win_lose = False
+        self.win = Win(self.display, self.gameStateManager)
+        self.lose = Lose(self.display, self.gameStateManager)
+
     def run(self):
         self.load_assets()
-        
         self.set_world_size()  
         self.set_player()  
         self.draw_board()
@@ -66,6 +76,7 @@ class WumpusWorld():
         # put player_avatar on top of the starting cell
         self.update_player_avatar_position(0, 0)
         self.temp = self.check_valid_move(0, 0)
+        self.load_skill_gold_()
 
         while True:
             for event in pygame.event.get():
@@ -91,8 +102,12 @@ class WumpusWorld():
             self.display.blit(self.board_surface, self.board_coord) # board
             self.display.blit(self.player_avatar, self.player_avatar_rect) # player
             self.display.blit(self.cell_status, (725, 268)) # tile status
-            
+            self.display.blit(self.skill_text, (900, 115))
+            self.display.blit(self.yellow_cell_text, (900, 180))
+
             pygame.display.flip()
+            if self.is_win_lose:
+                self.gameStateManager.get_state().run(self.player_score)
             self.clock.tick(self.FPS)
     
     def set_player(self):
@@ -119,27 +134,31 @@ class WumpusWorld():
             self.probability_blue_cells = 0.6 # 0.2 is too low
             self.red_cells = 1
             self.yellow_cells = 1
+            self.skill = 1
         elif self.current_world_size == 'select_world_size_2':
             self.board_size = 6
             self.cell_size = 83
             self.board_coord = (78, 50)
             self.probability_blue_cells = 0.7
-            self.red_cells = 2
+            self.red_cells = 3
             self.yellow_cells = 1
+            self.skill = 2
         elif self.current_world_size == 'select_world_size_3':
             self.board_size = 8
             self.cell_size = 62
             self.board_coord = (82, 50)
             self.probability_blue_cells = 1
-            self.red_cells = 3
+            self.red_cells = 6
             self.yellow_cells = 2
+            self.skill = 3
         elif self.current_world_size == 'select_world_size_4':
             self.board_size = 10
             self.cell_size = 50
             self.board_coord = (82, 50)
             self.probability_blue_cells = 2
-            self.red_cells = 6
+            self.red_cells = 9
             self.yellow_cells = 3
+            self.skill = 5
         else:
             print(f"Invalid self.current_world_size: {self.current_world_size}")
 
@@ -311,6 +330,7 @@ class WumpusWorld():
         if key == 'w':
             if self.facing_in['above']:
                 new_row -= 1
+                self.action_minus_score += 1
             else:
                 # Rotate or flip the player_avatar based on the current direction it's facing
                 if self.facing_in['left']:
@@ -326,6 +346,7 @@ class WumpusWorld():
         elif key == 's':
             if self.facing_in['below']:
                 new_row += 1
+                self.action_minus_score += 1
             else:
                 # Rotate or flip the player_avatar based on the current direction it's facing
                 if self.facing_in['left']:
@@ -340,6 +361,7 @@ class WumpusWorld():
         elif key == 'a':
             if self.facing_in['left']:
                 new_col -= 1
+                self.action_minus_score += 1
             else:
                 # Rotate or flip the player_avatar based on the current direction it's facing
                 if self.facing_in['above']:
@@ -354,6 +376,7 @@ class WumpusWorld():
         elif key == 'd':
             if self.facing_in['right']:
                 new_col += 1
+                self.action_minus_score += 1
             else:
                 # Rotate or flip the player_avatar based on the current direction it's facing
                 if self.facing_in['above']:
@@ -366,17 +389,37 @@ class WumpusWorld():
                 self.facing_in = {'above': False, 'below': False, 'left': False, 'right': True}
 
         elif key == 'space':
-            if self.cells[curr_row][curr_col] == 4:
+            if self.cells[curr_row][curr_col] == 1:
+                # start cell
+                if self.yellow_cells == 0:
+                    # climb out
+                    self.player_score -= self.action_minus_score
+                    print(f"climb self.player_score: {self.player_score}")
+                    self.gameStateManager.set_state(self.win)
+                    self.is_win_lose = True
+                    self.still_gold = False
+                else:
+                    self.still_gold = True
+
+            elif self.cells[curr_row][curr_col] == 4:
                 # grab the gold
                 self.cells[curr_row][curr_col] = 0
                 self.draw_cell()
-            else:
+                self.yellow_cells -= 1
+                self.player_score += 1000
+                print(f"gold self.player_score: {self.player_score}")
+                self.load_skill_gold_()
+
+            elif self.skill != 0:
                 # fire the spirit ball !!!!
                 self.spirit_ball = pygame.image.load(os.path.join(self.images_dir, "skill.png"))
                 self.spirit_ball = pygame.transform.scale(self.spirit_ball, (self.cell_size, self.cell_size))
                 
                 s_ball_row = curr_row
                 s_ball_col = curr_col 
+                self.action_minus_score += 10
+                self.skill -= 1
+                self.wumpus_hit = False
                 if self.facing_in['above']:
                     while s_ball_row != 0:
                         s_ball_row -= 1
@@ -385,9 +428,9 @@ class WumpusWorld():
                         pygame.display.flip()
                         pygame.time.wait(50)
                         if self.cells[s_ball_row][s_ball_col] == 3:
-                            self.cells[s_ball_row][s_ball_col] = 0
-                            self.draw_cell()
+                            self.wumpus_hit = True
                             break
+                        
                 if self.facing_in['below']:
                     while s_ball_row != self.board_size - 1:
                         s_ball_row += 1
@@ -396,9 +439,9 @@ class WumpusWorld():
                         pygame.display.flip()
                         pygame.time.wait(50)
                         if self.cells[s_ball_row][s_ball_col] == 3:
-                            self.cells[s_ball_row][s_ball_col] = 0
-                            self.draw_cell()
+                            self.wumpus_hit = True
                             break
+                        
                 if self.facing_in['left']:
                     while s_ball_col != 0:
                         s_ball_col -= 1
@@ -407,9 +450,9 @@ class WumpusWorld():
                         pygame.display.flip()
                         pygame.time.wait(50)
                         if self.cells[s_ball_row][s_ball_col] == 3:
-                            self.cells[s_ball_row][s_ball_col] = 0
-                            self.draw_cell()
+                            self.wumpus_hit = True
                             break
+                        
                 if self.facing_in['right']:
                     while s_ball_col != self.board_size - 1:
                         s_ball_col += 1
@@ -418,15 +461,52 @@ class WumpusWorld():
                         pygame.display.flip()
                         pygame.time.wait(50)
                         if self.cells[s_ball_row][s_ball_col] == 3:
-                            self.cells[s_ball_row][s_ball_col] = 0
-                            self.draw_cell()
+                            self.wumpus_hit = True
                             break
+                        
+                if self.wumpus_hit:
+                    self.display_time = pygame.time.get_ticks() + 3000
+                    self.scream = gif.load(os.path.join(self.gif_dir, "scream.gif"))
+                    while self.wumpus_hit:
+                        self.scream.render(self.display, (82, 50))
+                        pygame.display.flip()
+                        if pygame.time.get_ticks() > self.display_time:
+                            self.wumpus_hit = False
+                    
+                    # use this instead if the program is crashing
+                    # self.scream = pygame.image.load(os.path.join(self.images_dir, "scream.png"))
+                    # self.display.blit(self.scream, (82, 50))
+                    # pygame.display.flip()
+                    # pygame.time.wait(3000)
+                    self.cells[s_ball_row][s_ball_col] = 0
+                    self.draw_cell()
+
+                self.load_skill_gold_()
             
         # Check if the new position is valid
         if self.check_valid_move(new_row, new_col):
             self.curr_position[0] = new_row
             self.curr_position[1] = new_col
+            
+            # store the cell and its status
+            self.player_moves[(new_row, new_col)] = self.cells[new_row][new_col]
+            print(f"\n>> self.player_moves: {self.player_moves}")
             self.update_player_avatar_position(new_row, new_col)
+
+            # check if the current cell is a pit or a wumpus
+            if self.cells[new_row][new_col] == 2:
+                self.action_minus_score += 1000
+                self.player_score -= self.action_minus_score
+                print(f"pit self.player_score: {self.player_score}")
+                self.gameStateManager.set_state(self.lose)
+                self.is_win_lose = True
+
+            if self.cells[new_row][new_col] == 3:
+                self.action_minus_score += 1000
+                self.player_score -= self.action_minus_score
+                print(f"wumpus self.player_score: {self.player_score}")
+                self.gameStateManager.set_state(self.lose)
+                self.is_win_lose = True
 
     def check_valid_move(self, row, col):
         if row < 0 or row >= self.board_size or col < 0 or col >= self.board_size:
@@ -440,7 +520,11 @@ class WumpusWorld():
         if self.curr_cell_value == 0:
             self.cell_status = pygame.image.load(os.path.join(self.tile_status, "safe_tile.png"))
         elif self.curr_cell_value == 1:
-            self.cell_status = pygame.image.load(os.path.join(self.tile_status, "start_tile.png"))
+            if self.still_gold:
+                # self.cell_status = pygame.image.load(os.path.join(self.tile_status, "still_golds_1.png")) # this one is formal
+                self.cell_status = pygame.image.load(os.path.join(self.tile_status, "still_golds_2.png"))
+                self.still_gold = False
+            else: self.cell_status = pygame.image.load(os.path.join(self.tile_status, "start_tile.png"))
         elif self.curr_cell_value == 2:
             self.cell_status = pygame.image.load(os.path.join(self.images_dir, "pit.png"))
         elif self.curr_cell_value == 3:
@@ -478,12 +562,20 @@ class WumpusWorld():
         spirit_ball_y = self.board_coord[1] + new_row * self.cell_size
         self.spirit_ball_rect = self.spirit_ball.get_rect(topleft=(spirit_ball_x, spirit_ball_y))
 
+    def load_skill_gold_(self):
+        # get the number of self.skill and self.yellow_cell then display it to the screen
+        self.skill_text = self.font.render(f'{self.skill}', True, self.WHITE)
+        self.yellow_cell_text = self.font.render(f'{self.yellow_cells}', True, self.WHITE)
+    
     def load_assets(self):
         self.assets_dir = os.path.join("assets")
         self.states_dir = os.path.join(self.assets_dir, "states")
+        self.font_dir = os.path.join(self.assets_dir, "font")
         self.board_dir = os.path.join(self.assets_dir, "board")
         self.images_dir = os.path.join(self.board_dir, "img")
+        self.gif_dir = os.path.join(self.board_dir, "gif")
         self.tile_status = os.path.join(self.images_dir, "tile_status")
+        self.font = pygame.font.Font(os.path.join(self.font_dir, "PressStart2P-Regular.ttf"), 20)
         self.gif_obj = gif.load(os.path.join(self.states_dir, "board.gif"))
 
 

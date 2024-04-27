@@ -11,9 +11,6 @@ class Title():
         self.clock = pygame.time.Clock()        
 
         self.select_game_mode_1 = SelectGameMode(self.display, self.gameStateManager)
-        self.states = {
-            'select_game_mode_1': self.select_game_mode_1,
-        }
 
     def run(self):
         self.load_assets()
@@ -23,8 +20,8 @@ class Title():
                     pygame.quit()
                     quit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.gameStateManager.set_state('select_game_mode_1')
-                    self.states[self.gameStateManager.get_state()].run()
+                    self.gameStateManager.set_state(self.select_game_mode_1)
+                    self.gameStateManager.get_state().run()
             
             self.display.fill((255, 255, 255))
             self.gif_obj.render(self.display, (0, 0))
