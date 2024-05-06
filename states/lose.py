@@ -12,7 +12,7 @@ class Lose():
         self.RED = (255, 0, 0)    
 
     def run(self, player_score):
-        from title import Title
+        from states.title import Title
         self.load_assets()
         self.draw_rectangles()
 

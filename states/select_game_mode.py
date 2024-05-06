@@ -1,7 +1,7 @@
 import os
 import pygame
 import gif_pygame as gif
-from select_world_size import SelectWorldSize
+from states.select_world_size import SelectWorldSize
 
 class SelectGameMode():
     def __init__(self, display, gameStateManager):

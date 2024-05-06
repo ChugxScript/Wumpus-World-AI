@@ -3,8 +3,8 @@ import pygame
 import gif_pygame as gif
 import random
 import copy
-from win import Win
-from lose import Lose
+from states.win import Win
+from states.lose import Lose
 
 class WumpusWorld():
     def __init__(self, display, gameStateManager):

@@ -1,7 +1,7 @@
 import os
 import pygame
 import gif_pygame as gif
-from wumpus_world import WumpusWorld
+from states.wumpus_world import WumpusWorld
 
 class Controls():
     def __init__(self, display, gameStateManager):

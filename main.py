@@ -1,4 +1,5 @@
 import pygame
+import os
 from states.title import Title
 from states.game_state_manager import GameStateManager
 
@@ -17,6 +18,9 @@ class Game():
         }
 
     def run(self):
+        pygame.display.set_caption("Wumpus World by Olors")
+        icon = pygame.image.load(os.path.join('assets', 'board', 'img', 'GameIcon1.png'))
+        pygame.display.set_icon(icon)
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

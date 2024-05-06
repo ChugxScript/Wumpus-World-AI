@@ -1,7 +1,7 @@
 import os
 import pygame
 import gif_pygame as gif
-from controls import Controls
+from states.controls import Controls
 
 class SelectWorldSize():
     def __init__(self, display, gameStateManager):
