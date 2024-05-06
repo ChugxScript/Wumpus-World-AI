@@ -1,7 +1,7 @@
 import os
 import pygame
 import gif_pygame as gif
-from states.select_world_size import SelectWorldSize
+from select_world_size import SelectWorldSize
 
 class SelectGameMode():
     def __init__(self, display, gameStateManager):
@@ -15,7 +15,7 @@ class SelectGameMode():
         self.current_player = 'select_game_mode_1'
         self.gif_obj = gif.load(os.path.join(self.states_dir, f"{self.current_player}.gif"))
 
-        self.select_world_size = SelectWorldSize(self.display, self.gameStateManager, self.current_player)
+        self.select_world_size = SelectWorldSize(self.display, self.gameStateManager)
         
     def run(self):
         while True:
@@ -28,7 +28,7 @@ class SelectGameMode():
                         self.toggle_state()
                     if event.key == pygame.K_RETURN:
                         self.gameStateManager.set_state(self.select_world_size)
-                        self.gameStateManager.get_state().run()
+                        self.gameStateManager.get_state().run(self.current_player)
             
             self.display.fill((255, 255, 255))
             self.gif_obj.render(self.display, (0, 0))

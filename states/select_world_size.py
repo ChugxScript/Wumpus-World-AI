@@ -1,13 +1,13 @@
 import os
 import pygame
 import gif_pygame as gif
-from states.controls import Controls
+from controls import Controls
 
 class SelectWorldSize():
-    def __init__(self, display, gameStateManager, current_player):
+    def __init__(self, display, gameStateManager):
         self.display = display
         self.gameStateManager = gameStateManager
-        self.current_player = current_player
+        
         self.FPS = 60
         self.clock = pygame.time.Clock()
 
@@ -22,9 +22,10 @@ class SelectWorldSize():
         self.index = 0
         self.current_world_size = self.world_size_array[self.index]
 
-        self.controls = Controls(self.display, self.gameStateManager, self.current_player, self.current_world_size)
+        self.controls = Controls(self.display, self.gameStateManager)
         
-    def run(self):
+    def run(self, current_player):
+        self.current_player = current_player
         self.load_assets()
         while True:
             for event in pygame.event.get():
@@ -38,7 +39,7 @@ class SelectWorldSize():
                         self.toggle_state('s')
                     if event.key == pygame.K_RETURN:
                         self.gameStateManager.set_state(self.controls)
-                        self.gameStateManager.get_state().run()
+                        self.gameStateManager.get_state().run(self.current_player, self.current_world_size)
             
             self.display.fill((255, 255, 255))
             self.gif_obj.render(self.display, (0, 0))

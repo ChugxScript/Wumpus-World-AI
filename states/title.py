@@ -1,7 +1,7 @@
 import os
 import pygame
 import gif_pygame as gif
-from states.select_game_mode import SelectGameMode
+from select_game_mode import SelectGameMode
 
 class Title():
     def __init__(self, display, gameStateManager):
