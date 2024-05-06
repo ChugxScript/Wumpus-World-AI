@@ -31,6 +31,7 @@ class WumpusWorld():
         self.player_score = 0
         self.action_minus_score = 0
         self.still_gold = False
+        self.is_remove_wall = False
 
         self.is_win_lose = False
         self.win = Win(self.display, self.gameStateManager)
@@ -63,8 +64,8 @@ class WumpusWorld():
                         if rect["rect"].collidepoint(mouse_x, mouse_y):
                             print("Rectangle clicked:", rect["id"])
                             if rect["id"] == 1:
-                                # do something
-                                pass
+                                self.is_remove_wall = not self.is_remove_wall
+                                self.draw_cell()
                             if rect["id"] == 2:
                                 self.reset_game()
                                 self.set_world_size() 
@@ -97,8 +98,9 @@ class WumpusWorld():
             self.display.fill((255, 255, 255))
             self.gif_obj.render(self.display, (0, 0)) # gif background
             self.display.blit(self.board_surface, self.board_coord) # board
-            self.display.blit(self.cover_board_surface, self.board_coord)
-            self.cover_cells()
+            if not self.is_remove_wall:
+                self.display.blit(self.cover_board_surface, self.board_coord)
+                self.cover_cells()
             self.display.blit(self.player_avatar, self.player_avatar_rect) # player
             self.display.blit(self.cell_status, (725, 268)) # tile status
             self.display.blit(self.skill_text, (900, 115))

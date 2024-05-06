@@ -18,7 +18,7 @@ class Game():
         }
 
     def run(self):
-        pygame.display.set_caption("Wumpus World by Olors")
+        pygame.display.set_caption("Wumpus World")
         icon = pygame.image.load(os.path.join('assets', 'board', 'img', 'GameIcon1.png'))
         pygame.display.set_icon(icon)
         while True:
@@ -36,9 +36,3 @@ class Game():
 if __name__ == "__main__":
     g = Game()
     g.run()
-
-
-
-
-# inspiration
-# https://github.com/thiagodnf/wumpus-world-simulator
