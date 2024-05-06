@@ -4,6 +4,12 @@ Wumpus World is a classic problem in artificial intelligence used to demonstrate
 
 _This repository serves as Machine Problem 4 in subject CS322-M_-_CS321L-M - Artificial Intelligence_
 
+## USAGE
+
+- git clone `https://github.com/ChugxScript/Wumpus-World-AI.git`
+- git install `requirements.txt`
+- run `main.py`
+
 ## RULES
 
 - Stench: Rooms adjacent to the Wumpus emit a stench.
@@ -26,14 +32,14 @@ _This repository serves as Machine Problem 4 in subject CS322-M_-_CS321L-M - Art
 - Each room has a x probability of containing a pit, except [0, 0] depending on the world size.
 - The number of Wumpus and gold generate base on the world size.
 
-# ACTUATORS
+## ACTUATORS
 
 - Turn left, right, above, and below
 - Grab gold
 - Shoot skill
 - Climb
 
-# SENSORS
+## SENSORS
 
 - Perceive
   - `Stench` if cell is adjacent to wumpus
