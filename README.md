@@ -31,6 +31,7 @@ _This repository serves as Machine Problem 5 in subject CS322-M_-_CS321L-M - Art
 - Wumpus and gold are randomly placed.
 - Each room has a x probability of containing a pit, except [0, 0] depending on the world size.
 - The number of Wumpus and gold generate base on the world size.
+- DFS algorithm is use in generation of valid world
 
 ## ACTUATORS
 
