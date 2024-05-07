@@ -2,7 +2,7 @@
 
 Wumpus World is a classic problem in artificial intelligence used to demonstrate reasoning under uncertainty. In this environment, an agent navigates a grid-based world filled with hazards like bottomless pits and a fearsome Wumpus. The agent's objective is to find gold and return to safety while avoiding dangers. The agent uses logic and inference to deduce the locations of hazards based on sensory input, making it a classic problem for studying search algorithms, logical reasoning, and planning in AI.
 
-_This repository serves as Machine Problem 4 in subject CS322-M_-_CS321L-M - Artificial Intelligence_
+_This repository serves as Machine Problem 5 in subject CS322-M_-_CS321L-M - Artificial Intelligence_
 
 ## USAGE
 
